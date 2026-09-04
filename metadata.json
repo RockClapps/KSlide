@@ -1,0 +1,21 @@
+{
+    "KPlugin": {
+        "Name": "Kslide",
+        "Description": "Scrolling wm for kde",
+        "Icon": "preferences-system-windows",
+        
+        "Authors": [
+            {
+                "Email": "rockclapps@gmail.com",
+                "Name": "Rock Clapps"
+            }
+        ],
+        "Id": "kslide",
+        "Version": "1.0",
+        "License": "GPLv3",
+        "Website": "https://github.com/rockclapps/kslide"
+    },
+    "X-Plasma-API": "javascript",
+    "X-Plasma-MainScript": "code/main.js",
+    "KPackageStructure": "KWin/Script"
+}
