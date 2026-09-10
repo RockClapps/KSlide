@@ -2,6 +2,13 @@ var padding = 8;
 var dockheight = 32;
 var desktopTracker = new Map();
 
+class ScrollingSurface {
+  constructor() {
+    this.index = 0;
+    this.array = new Array();
+  }
+}
+
 function windowIsTilable(window) {
   if (!window.normalWindow || 
     window.specialWindow || 
@@ -35,11 +42,19 @@ function placePanelInSlot(slot, window){
 function refocusOnIndex(index){
   var currentDesktop = workspace.currentDesktop;
   if (!desktopTracker.has(currentDesktop) || 
-    desktopTracker.get(currentDesktop).length == 0) {
+    desktopTracker.get(currentDesktop).array.length == 0) {
     return;
   }
+  var windowList = desktopTracker.get(currentDesktop).array;
 
-  var windowList = desktopTracker.get(currentDesktop);
+  if (index == -1) {
+    index = desktopTracker.get(currentDesktop).index;
+  }
+
+  if (index >= windowList.length) {
+    index--;
+  }
+
   for (var i = 0; i < windowList.length; i++) {
     if (i == index){
       windowList[i].minimized = false;
@@ -51,15 +66,16 @@ function refocusOnIndex(index){
       windowList[i].minimized = true;
     }
   }
+  desktopTracker.get(currentDesktop).index = index;
 }
 
 function tileWindow(window) {
   var currentDesktop = workspace.currentDesktop;
   if (!desktopTracker.has(currentDesktop)){
-    desktopTracker.set(currentDesktop, new Array());
+    desktopTracker.set(currentDesktop, new ScrollingSurface());
   }
 
-  var windowList = desktopTracker.get(currentDesktop);
+  var windowList = desktopTracker.get(currentDesktop).array;
   windowList.push(window);
 
   if ( windowList.length <= 2 ) {
@@ -76,6 +92,17 @@ function addWindow(window) {
 }
 
 function removeWindow(window) {
+  var currentDesktop = workspace.currentDesktop;
+  if (!desktopTracker.has(currentDesktop)){
+    return;
+  }
+  var windowList = desktopTracker.get(currentDesktop).array;
+  var index = windowList.indexOf(window);
+  if ( index != -1 ) {
+    windowList.splice(index, 1);
+  }
+  console.info(windowList.length);
+  refocusOnIndex(-1);
 }
 
 workspace.windowAdded.connect(addWindow);
