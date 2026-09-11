@@ -101,9 +101,50 @@ function removeWindow(window) {
   if ( index != -1 ) {
     windowList.splice(index, 1);
   }
-  console.info(windowList.length);
+  //console.info(windowList.length);
   refocusOnIndex(-1);
+}
+
+function focusSlideLeft() { 
+  var currentDesktop = workspace.currentDesktop;
+  if (!desktopTracker.has(currentDesktop)){
+    return;
+  }
+
+  var windowList = desktopTracker.get(currentDesktop).array;
+  var index = desktopTracker.get(currentDesktop).index;
+
+  var currentWindow = workspace.activeWindow;
+  var currentWindowIndex = windowList.indexOf(currentWindow);
+  if ( currentWindowIndex == -1) { return; }
+
+  if ( currentWindowIndex - 1 < index ) {
+    refocusOnIndex( index - 1 );
+  }
+  workspace.activeWindow = windowList[ currentWindowIndex - 1 ];
+}
+
+function focusSlideRight() { 
+  var currentDesktop = workspace.currentDesktop;
+  if (!desktopTracker.has(currentDesktop)){
+    return;
+  }
+
+  var windowList = desktopTracker.get(currentDesktop).array;
+  var index = desktopTracker.get(currentDesktop).index;
+
+  var currentWindow = workspace.activeWindow;
+  var currentWindowIndex = windowList.indexOf(currentWindow);
+  if ( currentWindowIndex == -1) { return; }
+
+  if ( currentWindowIndex + 1 >= index + 2) {
+    refocusOnIndex( index + 1 );
+  }
+  workspace.activeWindow = windowList[ currentWindowIndex + 1 ];
 }
 
 workspace.windowAdded.connect(addWindow);
 workspace.windowRemoved.connect(removeWindow);
+
+registerShortcut("Focus slides left", "Slide focus to the left", "", focusSlideLeft)
+registerShortcut("Focus slides right", "Slide focus to the right", "", focusSlideRight)
