@@ -1,21 +1,25 @@
 var padding = 8;
 var dockheight = 32;
 var desktopTracker = new Map();
+var unTiled = new Array();
 
 class ScrollingSurface {
   constructor() {
     this.index = 0;
+    this.focusedIndex = 0;
     this.array = new Array();
   }
 }
 
 function windowIsTilable(window) {
-  if (!window.normalWindow || 
-    window.specialWindow || 
-    window.fullscreen ) { 
-    return false; 
+  //console.info(window.layer);
+  if (window.normalWindow && 
+    !window.specialWindow && 
+    !window.fullscreen &&
+    (window.layer == 2 || window.layer == 1) ) { 
+    return true; 
   }
-  return true;
+  return false;
 }
 
 function placePanelInSlot(slot, window){
@@ -52,7 +56,7 @@ function refocusOnIndex(index){
   }
 
   if (index >= windowList.length) {
-    index--;
+    index = windowList.length - 1;
   }
 
   for (var i = 0; i < windowList.length; i++) {
@@ -67,42 +71,71 @@ function refocusOnIndex(index){
     }
   }
   desktopTracker.get(currentDesktop).index = index;
+  if ( index == windowList.length - 1) {
+    workspace.activeWindow = windowList[index];
+  }
+}
+
+function addHooks(window) {
+  var currentDesktop = workspace.currentDesktop;
+
+  window.interactiveMoveResizeFinished.connect(() => {
+    refocusOnIndex(desktopTracker.get(currentDesktop).index)
+  });
+  window.desktopsChanged.connect(() => {
+    removeWindow(workspace.activeWindow);
+  })
 }
 
 function tileWindow(window) {
   var currentDesktop = workspace.currentDesktop;
+  //console.info(currentDesktop);
   if (!desktopTracker.has(currentDesktop)){
     desktopTracker.set(currentDesktop, new ScrollingSurface());
   }
 
   var windowList = desktopTracker.get(currentDesktop).array;
-  windowList.push(window);
+  var index = desktopTracker.get(currentDesktop).index;
+  var focusedIndex = desktopTracker.get(currentDesktop).focusedIndex;
+  console.info(focusedIndex);
+
+  windowList.splice(focusedIndex + 1, 0, window);
 
   if ( windowList.length <= 2 ) {
     refocusOnIndex(0);
   } else {
-    refocusOnIndex(windowList.length - 2);
+    if ( (focusedIndex + 1) - index >= 2 ) {
+      refocusOnIndex(index + 1);
+    } else {
+      refocusOnIndex(index);
+    }
   }
+  desktopTracker.get(currentDesktop).focusedIndex = focusedIndex + 1;
+
+  addHooks(window);
 }
 
 function addWindow(window) {
   if ( windowIsTilable(window) ) {
+    unTiled.splice(window, 1);
     tileWindow(window);
   }
 }
 
 function removeWindow(window) {
   var currentDesktop = workspace.currentDesktop;
+  //console.info(currentDesktop);
   if (!desktopTracker.has(currentDesktop)){
     return;
   }
   var windowList = desktopTracker.get(currentDesktop).array;
   var index = windowList.indexOf(window);
   if ( index != -1 ) {
+    window.keepBelow = false;
     windowList.splice(index, 1);
+    refocusOnIndex(-1);
+    unTiled.push(window);
   }
-  //console.info(windowList.length);
-  refocusOnIndex(-1);
 }
 
 function focusSlideLeft() { 
@@ -143,8 +176,87 @@ function focusSlideRight() {
   workspace.activeWindow = windowList[ currentWindowIndex + 1 ];
 }
 
+function getIndexOfFocusedWindow() {
+  var currentDesktop = workspace.currentDesktop;
+  if (!desktopTracker.has(currentDesktop)){
+    return -1;
+  }
+
+  var windowList = desktopTracker.get(currentDesktop).array;
+  var currentWindow = workspace.activeWindow;
+  return windowList.indexOf(currentWindow);
+}
+
+function toggleWindowTiling() {
+  var currentWindow = workspace.activeWindow;
+  var index = getIndexOfFocusedWindow();
+  if ( index == -1 ) {
+    addWindow(currentWindow);
+  } else {
+    removeWindow(currentWindow);
+  }
+}
+
+function swapLeft() {
+  var currentDesktop = workspace.currentDesktop;
+  if (!desktopTracker.has(currentDesktop)){
+    return;
+  }
+
+  var windowList = desktopTracker.get(currentDesktop).array;
+  var windowIndex = windowList.indexOf(workspace.activeWindow);
+  var focusIndex = desktopTracker.get(currentDesktop).focusIndex;
+
+  if ( windowIndex == -1 || windowIndex == 0 ) {
+    return;
+  }
+  windowList[windowIndex] = windowList[windowIndex - 1];
+  windowList[windowIndex - 1] = workspace.activeWindow;
+
+  refocusOnIndex(windowIndex - 1);
+}
+
+function swapRight() {
+  var currentDesktop = workspace.currentDesktop;
+  if (!desktopTracker.has(currentDesktop)){
+    return;
+  }
+
+  var windowList = desktopTracker.get(currentDesktop).array;
+  var index = desktopTracker.get(currentDesktop).index;
+  var windowIndex = windowList.indexOf(workspace.activeWindow);
+  var focusIndex = desktopTracker.get(currentDesktop).focusIndex;
+
+  if ( windowIndex == -1 || windowIndex == windowList.length - 1 ) {
+    return;
+  }
+  windowList[windowIndex] = windowList[windowIndex + 1];
+  windowList[windowIndex + 1] = workspace.activeWindow;
+
+  if ( focusIndex + 1 > index + 1 ) {
+    refocusOnIndex(index + 1);
+  } else {
+    refocusOnIndex(windowIndex);
+  }
+}
+
 workspace.windowAdded.connect(addWindow);
 workspace.windowRemoved.connect(removeWindow);
+workspace.windowActivated.connect((window) => {
+  var currentDesktop = workspace.currentDesktop;
+  if (!desktopTracker.has(currentDesktop)){
+    return;
+  }
+  var index = desktopTracker.get(currentDesktop).array.indexOf(window);
+  if ( index != -1 ) {
+    desktopTracker.get(currentDesktop).focusedIndex = index;
+  }
+});
 
-registerShortcut("Focus slides left", "Slide focus to the left", "", focusSlideLeft)
-registerShortcut("Focus slides right", "Slide focus to the right", "", focusSlideRight)
+registerShortcut("KSlideFocusLeft", "Kslide: Slide focus to the left", "", focusSlideLeft)
+registerShortcut("KSlideFocusSight", "Kslide: Slide focus to the right", "", focusSlideRight)
+registerShortcut("KSlideToggle", "Kslide: Toggle window tiling", "", toggleWindowTiling)
+registerShortcut("KSlideRefocus", "Kslide: refocus tiled windows", "", () => {refocusOnIndex(-1);})
+registerShortcut("KSlideSwapLeft", "Kslide: Swap window to the left", "", swapLeft)
+registerShortcut("KSlideSwapRight", "Kslide: Swap window to the right", "", swapRight)
+
