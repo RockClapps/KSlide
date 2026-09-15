@@ -12,7 +12,7 @@
         ],
         "Id": "kslide",
         "Version": "1.0",
-        "License": "GPLv3",
+        "License": "MIT",
         "Website": "https://github.com/rockclapps/kslide"
     },
     "X-Plasma-API": "javascript",
