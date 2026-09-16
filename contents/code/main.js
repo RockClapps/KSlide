@@ -54,6 +54,7 @@ function windowIsTilable(window) {
 }
 
 function placePanelInSlot(slot, window){
+  if ( !window ) { return; }
   var placementArea = workspace.clientArea(0, window);
   //console.info("PlacementArea: position " + placementArea.x + "x" + placementArea.y + " size " + placementArea.width + "x" + placementArea.height )
   window.keepBelow = true;
