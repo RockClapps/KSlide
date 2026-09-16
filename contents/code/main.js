@@ -1,6 +1,7 @@
 var padding = 8;
 var desktopTracker = new Map();
 var unTiled = new Array();
+var hooked = new Array();
 
 class ScrollingSurface {
   constructor() {
@@ -110,6 +111,11 @@ function refocusOnIndex(index){
 }
 
 function addHooks(window) {
+  if ( hooked.indexOf(window) != -1 ) {
+    return;
+  }
+  hooked.push(window);
+
   var currentDesktop = workspace.currentDesktop;
 
   window.interactiveMoveResizeFinished.connect(() => {
@@ -117,12 +123,13 @@ function addHooks(window) {
   });
 
   window.desktopsChanged.connect(() => {
+    //console.info("DESKTOP CHANGED");
     var window = workspace.activeWindow;
     //console.info(window);
     var unTiledIndex = unTiled.indexOf(window);
     if ( unTiledIndex != -1 ) { return; }
 
-    var winOutput = window.output;
+    var winOutput = workspace.activeScreen;
     //console.info("WINOUTPUT" + winOutput);
     for ( var i = 0; i < workspace.desktops.length; i++ ) {
       unTileWindow(desktopTracker.get(winOutput).get(workspace.desktops[i]), window);
@@ -136,46 +143,42 @@ function addHooks(window) {
   });
 
   window.outputChanged.connect(() => {
+    //console.info("OUTPUT CHANGED");
     var window = workspace.activeWindow;
     //console.info(window);
     var unTiledIndex = unTiled.indexOf(window);
     if ( unTiledIndex != -1 ) { return; }
 
-    var winOutput = window.output;
+    var winOutput = workspace.activeScreen;
     //console.info("WIN OUTPUT " + winOutput);
+    //console.info("DESKTOPTRACKER LENGTH " + desktopTracker.size);
+
     for ( var i = 0; i < workspace.screens.length; i++ ) {
       for ( var j = 0; j < workspace.desktops.length; j++ ) {
-        console.info("UnTile i " + i + " j " + j);
+        //console.info("UnTile i " + i + " j " + j);
         unTileWindow(desktopTracker.get(workspace.screens[i]).get(workspace.desktops[j]), window);
       }
     }
 
     if ( !windowIsTilable(window) ) { return; }
 
-    var winOutput = window.output;
+    //console.info(window.desktops.length);
     for ( var i = 0; i < window.desktops.length; i++ ) {
-      console.info("Tile i " + i);
+      //console.info("Tile i " + i);
       tileWindow(desktopTracker.get(winOutput).get(window.desktops[i]), window);
     }
   });
 
-  //window.maximizedAboutToChange.connect((mode) => {
-  //  var window = workspace.activeWindow;
-  //  console.info(mode);
-  //  if ( mode == 3 ) {
-  //    unTileWindow(workspace.currentDesktop, window);
-  //  }
-  //});
-
-  //window.maximizedAboutToChange.connect((mode) => {
-  //  var window = workspace.activeWindow;
-  //  console.info(mode);
-  //  if ( mode == 3 ) {
-  //    unTileWindow(workspace.currentDesktop, window);
-  //  } else if ( unTiled.indexOf(window) == -1 ) {
-  //    addWindow(window);
-  //  }
-  //});
+  window.maximizedAboutToChange.connect((mode) => {
+    var window = workspace.activeWindow;
+    //console.info(mode);
+    if ( mode == 3 ) {
+      unTileWindow(getCurrentScrollingSurface(), window);
+      window.keepBelow = true;
+    } else if ( mode == 0 && unTiled.indexOf(window) == -1 ) {
+      addWindow(window);
+    }
+  });
 
   window.fullScreenChanged.connect(() => {
     var window = workspace.activeWindow;
@@ -359,6 +362,7 @@ workspace.windowAdded.connect(addWindow);
 workspace.windowRemoved.connect((window) => {
   removeWindow(window);
   unTiled.splice(window, 1);
+  hooked.splice(window, 1);
 });
 workspace.windowActivated.connect((window) => {
   var scrollingSurface = getCurrentScrollingSurface();
@@ -395,4 +399,3 @@ registerShortcut("KSlideToggle", "Kslide: Toggle window tiling", "", toggleWindo
 registerShortcut("KSlideRefocus", "Kslide: refocus tiled windows", "", () => {refocusOnIndex(-1);});
 registerShortcut("KSlideSwapLeft", "Kslide: Swap window to the left", "", swapLeft);
 registerShortcut("KSlideSwapRight", "Kslide: Swap window to the right", "", swapRight);
-

@@ -24,5 +24,3 @@ A simple scrolling window manager emulator for kwin
 
 - Breaks KDE's panel configuration interface, so you should turn it off while editing
   your dock
-- Moving a window to another output seems to double the amount of adjustment calls
-  each time its moved
