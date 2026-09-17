@@ -24,6 +24,24 @@ function generateScrollingSurfaces() {
   }
 }
 
+function getScrollingSurface(output, desktop) {
+
+  var currentOutput = output;
+  var currentDesktop = desktop;
+
+  if ( !desktopTracker.has(currentOutput) ) {
+    desktopTracker.set(currentOutput, new Map()); 
+    //console.info("NEW OUTPUT");
+  }
+
+  if ( !desktopTracker.get(currentOutput).get(currentDesktop) ) {
+    desktopTracker.get(currentOutput).set(currentDesktop, new ScrollingSurface()); 
+    //console.info("NEW Desktop");
+  }
+
+  return desktopTracker.get(currentOutput).get(currentDesktop);
+}
+
 function getCurrentScrollingSurface() {
 
   var currentOutput = workspace.activeScreen;
@@ -133,13 +151,13 @@ function addHooks(window) {
     var winOutput = workspace.activeScreen;
     //console.info("WINOUTPUT" + winOutput);
     for ( var i = 0; i < workspace.desktops.length; i++ ) {
-      unTileWindow(desktopTracker.get(winOutput).get(workspace.desktops[i]), window);
+      unTileWindow(getScrollingSurface(winOutput, workspace.desktops[i]), window);
     }
 
     if ( !windowIsTilable(window) ) { return; }
 
     for ( var i = 0; i < window.desktops.length; i++ ) {
-      tileWindow(desktopTracker.get(winOutput).get(window.desktops[i]), window);
+      tileWindow(getScrollingSurface(winOutput, window.desktops[i]), window);
     }
   });
 
@@ -157,7 +175,7 @@ function addHooks(window) {
     for ( var i = 0; i < workspace.screens.length; i++ ) {
       for ( var j = 0; j < workspace.desktops.length; j++ ) {
         //console.info("UnTile i " + i + " j " + j);
-        unTileWindow(desktopTracker.get(workspace.screens[i]).get(workspace.desktops[j]), window);
+        unTileWindow(getScrollingSurface(workspace.screens[i], workspace.desktops[j]), window);
       }
     }
 
@@ -166,7 +184,7 @@ function addHooks(window) {
     //console.info(window.desktops.length);
     for ( var i = 0; i < window.desktops.length; i++ ) {
       //console.info("Tile i " + i);
-      tileWindow(desktopTracker.get(winOutput).get(window.desktops[i]), window);
+      tileWindow(getScrollingSurface(winOutput, window.desktops[i]), window);
     }
   });
 
@@ -250,7 +268,7 @@ function removeWindow(window) {
   for ( var i = 0; i < window.desktops.length; i++ ) {
     var winOutput = window.output;
     //console.info("WINOUTPUT" + winOutput);
-    unTileWindow(desktopTracker.get(winOutput).get(window.desktops[i]), window);
+    unTileWindow(getScrollingSurface(winOutput, window.desktops[i]), window);
   }
 }
 
