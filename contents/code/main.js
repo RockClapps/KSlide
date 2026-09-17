@@ -11,15 +11,28 @@ class ScrollingSurface {
   }
 }
 
+function getScrollingSurface(output, desktop) {
+
+  var currentOutput = output;
+  var currentDesktop = desktop;
+
+  if ( !desktopTracker.has(currentOutput) ) {
+    desktopTracker.set(currentOutput, new Map()); 
+    //console.info("NEW OUTPUT");
+  }
+
+  if ( !desktopTracker.get(currentOutput).get(currentDesktop) ) {
+    desktopTracker.get(currentOutput).set(currentDesktop, new ScrollingSurface()); 
+    //console.info("NEW Desktop");
+  }
+
+  return desktopTracker.get(currentOutput).get(currentDesktop);
+}
+
 function generateScrollingSurfaces() {
   for ( var i = 0; i < workspace.screens.length; i++ ) {
     for ( var j = 0; j < workspace.desktops.length; j++ ) {
-      if (!desktopTracker.has(workspace.screens[i])) {
-        desktopTracker.set(workspace.screens[i], new Map());
-      }
-      if (!desktopTracker.get(workspace.screens[i]).has(workspace.desktops[j])) {
-        desktopTracker.get(workspace.screens[i]).set(workspace.desktops[j], new ScrollingSurface());
-      }
+      getScrollingSurface(workspace.screens[i], workspace.desktops[j]);
     }
   }
 }
