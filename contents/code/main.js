@@ -2,6 +2,7 @@ var padding = 8;
 var desktopTracker = new Map();
 var unTiled = new Array();
 var hooked = new Array();
+var resizingInteractively = false;
 
 class ScrollingSurface {
   constructor() {
@@ -150,8 +151,28 @@ function addHooks(window) {
 
   var currentDesktop = workspace.currentDesktop;
 
+  window.interactiveMoveResizeStarted.connect(() => {
+    resizingInteractively = true;
+  });
+
   window.interactiveMoveResizeFinished.connect(() => {
-    refocusOnIndex(-1)
+    resizingInteractively = false;
+    var window = workspace.activeWindow;
+    var scrollingSurface = getCurrentScrollingSurface();
+    if ( scrollingSurface.array.indexOf(window) != -1 ) {
+      refocusOnIndex(-1)
+    }
+  });
+
+  window.frameGeometryChanged.connect(() => {
+    //console.info("FRAMEGEOCHANGED");
+    if ( resizingInteractively ) { return; }
+    //console.info("FRAMEGEOCHANGED AFTER CHECK");
+    var window = workspace.activeWindow;
+    var scrollingSurface = getCurrentScrollingSurface();
+    if ( scrollingSurface.array.indexOf(window) != -1 ) {
+      refocusOnIndex(-1)
+    }
   });
 
   window.desktopsChanged.connect(() => {
@@ -340,8 +361,10 @@ function toggleWindowTiling() {
   var index = getIndexOfFocusedWindow();
   if ( index == -1 ) {
     addWindow(currentWindow);
+    workspace.activeWindow = currentWindow;
   } else {
     removeWindow(currentWindow);
+    workspace.activeWindow = currentWindow;
   }
 }
 
