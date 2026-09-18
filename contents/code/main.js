@@ -262,13 +262,13 @@ function tileWindow(scrollingSurface, window) {
     }
   }
   scrollingSurface.focusedIndex = focusedIndex + 1;
-
 }
 
 function addWindow(window) {
   if ( windowIsTilable(window) ) {
     unTiled.splice(window, 1);
     tileWindow(getCurrentScrollingSurface(), window);
+    workspace.activeWindow = window;
   }
 }
 
@@ -281,8 +281,10 @@ function unTileWindow(scrollingSurface, window) {
     if ( scrollingSurface == getCurrentScrollingSurface() ) {
       if ( index == scrollingSurface.index ) {
         refocusOnIndex(index - 1);
+        workspace.activeWindow = windowList[index - 1];
       } else {
         refocusOnIndex(-1);
+        workspace.activeWindow = windowList[index];
       } 
     }
   }
@@ -367,8 +369,9 @@ function swapLeft() {
   }
 
   var windowList = scrollingSurface.array;
+  var index = scrollingSurface.index;
   var windowIndex = windowList.indexOf(workspace.activeWindow);
-  var focusIndex = scrollingSurface.focusIndex;
+  var focusedIndex = scrollingSurface.focusedIndex;
 
   if ( windowIndex == -1 || windowIndex == 0 ) {
     return;
@@ -376,7 +379,14 @@ function swapLeft() {
   windowList[windowIndex] = windowList[windowIndex - 1];
   windowList[windowIndex - 1] = workspace.activeWindow;
 
-  refocusOnIndex(windowIndex - 1);
+  focusedIndex--;
+  scrollingSurface.focusedIndex = focusedIndex;
+
+  if (focusedIndex < index){
+    refocusOnIndex(index - 1);
+  } else {
+    refocusOnIndex(-1);
+  }
 }
 
 function swapRight() {
@@ -389,7 +399,7 @@ function swapRight() {
   var windowList = scrollingSurface.array;
   var index = scrollingSurface.index;
   var windowIndex = windowList.indexOf(workspace.activeWindow);
-  var focusIndex = scrollingSurface.focusIndex;
+  var focusedIndex = scrollingSurface.focusedIndex;
 
   if ( windowIndex == -1 || windowIndex == windowList.length - 1 ) {
     return;
@@ -397,10 +407,13 @@ function swapRight() {
   windowList[windowIndex] = windowList[windowIndex + 1];
   windowList[windowIndex + 1] = workspace.activeWindow;
 
-  if ( focusIndex + 1 > index + 1 ) {
+  focusedIndex++;
+  scrollingSurface.focusedIndex = focusedIndex;
+
+  if ( focusedIndex >= index + columns ) {
     refocusOnIndex(index + 1);
   } else {
-    refocusOnIndex(windowIndex);
+    refocusOnIndex(-1);
   }
 }
 
