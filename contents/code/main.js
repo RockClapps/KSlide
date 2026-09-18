@@ -1,3 +1,4 @@
+var columns = 2;
 var padding = 8;
 var desktopTracker = new Map();
 var unTiled = new Array();
@@ -88,25 +89,17 @@ function windowIsTilable(window) {
 function placePanelInSlot(slot, window){
   if ( !window ) { return; }
   var placementArea = workspace.clientArea(0, window);
+  var windowWidth = placementArea.width / columns;
+  var windowHeight = placementArea.height;
   //console.info("PlacementArea: position " + placementArea.x + "x" + placementArea.y + " size " + placementArea.width + "x" + placementArea.height )
   window.keepBelow = true;
   window.fullScreen = false;
   window.setMaximize(false, false);
-  if (slot == 1) {
-    window.frameGeometry = { 
-      x: placementArea.x + padding, 
-      y: placementArea.y + padding, 
-      width: (placementArea.width / 2) - padding - ( padding / 2 ),
-      height: (placementArea.height) - (2 * padding),
-    }
-  }
-  if (slot == 2) {
-    window.frameGeometry = { 
-      x: (placementArea.width / 2) + ( padding / 2 ), 
-      y: placementArea.y + padding, 
-      width: (placementArea.width / 2) - padding - ( padding / 2 ),
-      height: (placementArea.height) - (2 * padding),
-    }
+  window.frameGeometry = { 
+    x: ( (placementArea.width / columns ) * (slot) ) + padding,
+    y: placementArea.y + padding, 
+    width: windowWidth - padding - ( padding / columns ),
+    height: windowHeight - (2 * padding),
   }
 }
 
@@ -118,7 +111,7 @@ function refocusOnIndex(index){
   }
   var windowList = scrollingSurface.array;
 
-  if (index == -1) {
+  if (index <= -1) {
     index = scrollingSurface.index;
   }
 
@@ -127,16 +120,14 @@ function refocusOnIndex(index){
   }
 
   for (var i = 0; i < windowList.length; i++) {
-    if (i == index){
+    if (i >= index && i < index + columns){
       windowList[i].minimized = false;
-      placePanelInSlot(1, windowList[i]);
-    } else if (i == index + 1){
-      windowList[i].minimized = false;
-      placePanelInSlot(2, windowList[i]);
+      placePanelInSlot(i - index, windowList[i]);
     } else {
       windowList[i].minimized = true;
     }
   }
+
   scrollingSurface.index = index;
   if ( index == windowList.length - 1) {
     workspace.activeWindow = windowList[index];
@@ -261,10 +252,10 @@ function tileWindow(scrollingSurface, window) {
     return;
   }
 
-  if ( windowList.length <= 2 ) {
+  if ( windowList.length <= columns ) {
     refocusOnIndex(0);
   } else {
-    if ( (focusedIndex + 1) - index >= 2 ) {
+    if ( (focusedIndex + 1) - index >= columns ) {
       refocusOnIndex(index + 1);
     } else {
       refocusOnIndex(index);
@@ -339,7 +330,7 @@ function focusSlideRight() {
   if ( currentWindowIndex == -1) { return; }
   if ( currentWindowIndex == windowList.length - 1) { return; }
 
-  if ( currentWindowIndex + 1 >= index + 2) {
+  if ( currentWindowIndex + 1 >= index + columns) {
     refocusOnIndex( index + 1 );
   }
   workspace.activeWindow = windowList[ currentWindowIndex + 1 ];
@@ -432,8 +423,8 @@ workspace.windowActivated.connect((window) => {
     scrollingSurface.focusedIndex = windowIndex;
     if ( windowIndex < index ) {
       refocusOnIndex(windowIndex);
-    } else if ( windowIndex >= index + 2 ) {
-      refocusOnIndex(windowIndex - 1);
+    } else if ( windowIndex >= index + columns ) {
+      refocusOnIndex(windowIndex - columns);
     } else {
       refocusOnIndex(-1);
     }
