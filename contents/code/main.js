@@ -89,16 +89,16 @@ function windowIsTilable(window) {
 function placePanelInSlot(slot, window){
   if ( !window ) { return; }
   var placementArea = workspace.clientArea(0, window);
-  var windowWidth = placementArea.width / columns;
+  var windowWidth = (placementArea.width - padding) / columns;
   var windowHeight = placementArea.height;
   //console.info("PlacementArea: position " + placementArea.x + "x" + placementArea.y + " size " + placementArea.width + "x" + placementArea.height )
   window.keepBelow = true;
   window.fullScreen = false;
   window.setMaximize(false, false);
   window.frameGeometry = { 
-    x: ( (placementArea.width / columns ) * (slot) ) + padding,
+    x: padding + (windowWidth * slot),
     y: placementArea.y + padding, 
-    width: windowWidth - padding - ( padding / columns ),
+    width: windowWidth - padding,
     height: windowHeight - (2 * padding),
   }
 }
