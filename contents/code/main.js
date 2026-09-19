@@ -1,5 +1,6 @@
 var columns = 2;
 var padding = 8;
+var maximizeOnly = true;
 var desktopTracker = new Map();
 var unTiled = new Array();
 var hooked = new Array();
@@ -96,11 +97,21 @@ function placePanelInSlot(slot, window){
     window.keepBelow = true;
     window.fullScreen = false;
     window.setMaximize(false, false);
-    window.frameGeometry = { 
-      x: padding + (windowWidth * slot),
-      y: placementArea.y + padding, 
-      width: windowWidth - padding,
-      height: windowHeight - (2 * padding),
+
+    if (slot == -1) {
+      window.frameGeometry = { 
+        x: placementArea.x + padding,
+        y: placementArea.y + padding, 
+        width: placementArea.width - padding,
+        height: windowHeight - (2 * padding),
+      }
+    } else {
+      window.frameGeometry = { 
+        x: padding + (windowWidth * slot),
+        y: placementArea.y + padding, 
+        width: windowWidth - padding,
+        height: windowHeight - (2 * padding),
+      }
     }
   } catch (error) {
     unTileWindow(getCurrentScrollingSurface(), window);
@@ -123,12 +134,17 @@ function refocusOnIndex(index){
     index = windowList.length - 1;
   }
 
-  for (var i = 0; i < windowList.length; i++) {
-    if (i >= index && i < index + columns){
-      windowList[i].minimized = false;
-      placePanelInSlot(i - index, windowList[i]);
-    } else {
-      windowList[i].minimized = true;
+  if (windowList.length == 1 && maximizeOnly){
+        windowList[0].minimized = false;
+        placePanelInSlot(-1, windowList[0]);
+  } else {
+    for (var i = 0; i < windowList.length; i++) {
+      if (i >= index && i < index + columns){
+        windowList[i].minimized = false;
+        placePanelInSlot(i - index, windowList[i]);
+      } else {
+        windowList[i].minimized = true;
+      }
     }
   }
 
