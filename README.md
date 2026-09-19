@@ -14,7 +14,6 @@ A simple scrolling window manager emulator for kwin
 - Some proper scrolling features
   - Window resizing
   - Changing the size of columns relative
-  - Changing the number of columns (locked at 2 currently) 
   - Can't stack multiple windows per column
 - No animations
 - No drag+drop window swapping 
