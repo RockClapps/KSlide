@@ -129,9 +129,6 @@ function refocusOnIndex(index){
   }
 
   scrollingSurface.index = index;
-  if ( index == windowList.length - 1) {
-    workspace.activeWindow = windowList[index];
-  }
 }
 
 function addHooks(window) {
@@ -268,7 +265,6 @@ function addWindow(window) {
   if ( windowIsTilable(window) ) {
     unTiled.splice(window, 1);
     tileWindow(getCurrentScrollingSurface(), window);
-    workspace.activeWindow = window;
   }
 }
 
@@ -281,21 +277,33 @@ function unTileWindow(scrollingSurface, window) {
     if ( scrollingSurface == getCurrentScrollingSurface() ) {
       if ( index == scrollingSurface.index ) {
         refocusOnIndex(index - 1);
-        workspace.activeWindow = windowList[index - 1];
       } else {
         refocusOnIndex(-1);
-        workspace.activeWindow = windowList[index];
       } 
     }
   }
 }
 
 function removeWindow(window) {
+  var scrollingSurface = getCurrentScrollingSurface();
+  var windowList = scrollingSurface.array;
+  var index = scrollingSurface.index;
+  var windowIndex = windowList.indexOf(window);
+
   unTiled.push(window);
-  for ( var i = 0; i < window.desktops.length; i++ ) {
-    var winOutput = window.output;
-    //console.info("WINOUTPUT" + winOutput);
-    unTileWindow(getScrollingSurface(winOutput, window.desktops[i]), window);
+  for ( var i = 0; i < workspace.screens.length; i++ ) {
+    for ( var j = 0; j < window.desktops.length; j++ ) {
+      var winOutput = window.output;
+      //console.info("WINOUTPUT" + winOutput);
+      unTileWindow(getScrollingSurface(workspace.screens[i], window.desktops[j]), window);
+    }
+  }
+
+  if (windowIndex <= 0) { return; }
+  if (windowIndex == index) {
+    workspace.activeWindow = windowList[windowIndex - 1];
+  } else {
+    workspace.activeWindow = windowList[windowIndex];
   }
 }
 
@@ -354,10 +362,8 @@ function toggleWindowTiling() {
   var index = getIndexOfFocusedWindow();
   if ( index == -1 ) {
     addWindow(currentWindow);
-    workspace.activeWindow = currentWindow;
   } else {
     removeWindow(currentWindow);
-    workspace.activeWindow = currentWindow;
   }
 }
 
