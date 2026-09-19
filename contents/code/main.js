@@ -270,6 +270,7 @@ function addWindow(window) {
   if ( windowIsTilable(window) ) {
     unTiled.splice(window, 1);
     tileWindow(getCurrentScrollingSurface(), window);
+    workspace.activeWindow = window;
   }
 }
 
