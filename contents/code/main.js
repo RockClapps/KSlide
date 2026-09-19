@@ -154,9 +154,14 @@ function addHooks(window) {
 
   window.frameGeometryChanged.connect(() => {
     //console.info("FRAMEGEOCHANGED");
-    if ( resizingInteractively ) { return; }
+    if (resizingInteractively) { return; }
     //console.info("FRAMEGEOCHANGED AFTER CHECK");
     var window = workspace.activeWindow;
+    if (window.fullScreen == true) { return; }
+    if (window.frameGeometry.width == workspace.clientArea(1, window).width && window.frameGeometry.height == workspace.clientArea(1, window).height) { 
+      return; 
+    }
+    
     var scrollingSurface = getCurrentScrollingSurface();
     if ( scrollingSurface.array.indexOf(window) != -1 ) {
       refocusOnIndex(-1)
@@ -302,7 +307,7 @@ function removeWindow(window) {
   if (windowIndex <= 0) { return; }
   if (windowIndex == index) {
     workspace.activeWindow = windowList[windowIndex - 1];
-  } else {
+  } else if (windowIndex < windowList.length) {
     workspace.activeWindow = windowList[windowIndex];
   }
 }
