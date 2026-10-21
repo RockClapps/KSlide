@@ -101,7 +101,7 @@ function windowIsTilable(window) {
   return false;
 }
 
-function placePanelInSlot(slot, window){
+function placePanelInSlot(slot, window) {
   if ( !window ) { return; }
   try {
     var placementArea = workspace.clientArea(0, window);
@@ -113,7 +113,7 @@ function placePanelInSlot(slot, window){
     window.setMaximize(false, false);
 
     if (slot == -1) {
-      window.frameGeometry = { 
+      window.frameGeometry = {
         x: placementArea.x + padding,
         y: placementArea.y + padding, 
         width: placementArea.width - (2 * padding),
@@ -137,11 +137,11 @@ function resetSize(window) {
   var windowWidth = (placementArea.width - padding) / columns;
   var windowHeight = placementArea.height;
 
-  if (window.frameGeometry.width == windowWidth - padding && window.frameGeometry.height == windowHeight - (2 * padding) ) { 
+  if (window.frameGeometry.width == windowWidth - padding && window.frameGeometry.height == windowHeight - (2 * padding) ) {
     return;
   }
 
-  if (window.frameGeometry.width == placementArea.width - (2 * padding) && window.frameGeometry.height == windowHeight - (2 * padding) ) { 
+  if (window.frameGeometry.width == placementArea.width - (2 * padding) && window.frameGeometry.height == windowHeight - (2 * padding) ) {
     return;
   }
 
@@ -161,7 +161,7 @@ function resetSize(window) {
     return;
   }
 
-  if (windowList.length == 1 && maximizeOnly){
+  if (windowList.length == 1 && maximizeOnly) {
         window.minimized = false;
         placePanelInSlot(-1, window);
   } else {
@@ -186,12 +186,6 @@ function refocusOnIndex(index){
     index = windowList.length - 1;
   }
 
-  for (var i = 0; i < windowList.length; i++) {
-    if (i >= index && i < index + columns){
-      windowList[i].minimized = false;
-      placePanelInSlot(i - index, windowList[i]);
-    } else {
-      windowList[i].minimized = true;
   if (windowList.length == 1 && maximizeOnly){
         windowList[0].minimized = false;
         placePanelInSlot(-1, windowList[0]);
