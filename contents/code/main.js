@@ -33,6 +33,20 @@ function getScrollingSurface(output, desktop) {
 }
 
 function generateScrollingSurfaces() {
+
+  for (var [ikey, ivalue] of desktopTracker) {
+    if (workspace.screens.indexOf(ikey) == -1) {
+      desktopTracker.delete(ikey);
+      continue;
+    }
+    for (var [jkey, jvalue] of desktopTracker.get(ikey)) {
+      if (workspace.desktops.indexOf(jkey) == -1) {
+        desktopTracker.get(ikey).delete(jkey);
+        continue;
+      }
+    }
+  }
+
   for ( var i = 0; i < workspace.screens.length; i++ ) {
     for ( var j = 0; j < workspace.desktops.length; j++ ) {
       getScrollingSurface(workspace.screens[i], workspace.desktops[j]);
