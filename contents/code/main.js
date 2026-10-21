@@ -102,7 +102,7 @@ function placePanelInSlot(slot, window){
       window.frameGeometry = { 
         x: placementArea.x + padding,
         y: placementArea.y + padding, 
-        width: placementArea.width - padding,
+        width: placementArea.width - (2 * padding),
         height: windowHeight - (2 * padding),
       }
     } else {
@@ -115,6 +115,44 @@ function placePanelInSlot(slot, window){
     }
   } catch (error) {
     unTileWindow(getCurrentScrollingSurface(), window);
+  }
+}
+
+function resetSize(window) {
+  var placementArea = workspace.clientArea(0, window);
+  var windowWidth = (placementArea.width - padding) / columns;
+  var windowHeight = placementArea.height;
+
+  if (window.frameGeometry.width == windowWidth - padding && window.frameGeometry.height == windowHeight - (2 * padding) ) { 
+    return;
+  }
+
+  if (window.frameGeometry.width == placementArea.width - (2 * padding) && window.frameGeometry.height == windowHeight - (2 * padding) ) { 
+    return;
+  }
+
+  var scrollingSurface = getCurrentScrollingSurface();
+
+  if (scrollingSurface.array.length == 0) {
+    return;
+  }
+  var windowList = scrollingSurface.array;
+  var index = windowList.indexOf(window);
+
+  if (index <= -1) {
+    return;
+  }
+
+  if (index >= scrollingSurface.index + columns) {
+    return;
+  }
+
+  if (windowList.length == 1 && maximizeOnly){
+        window.minimized = false;
+        placePanelInSlot(-1, window);
+  } else {
+    console.info("placing on " + (index - scrollingSurface.index));
+    placePanelInSlot(index - scrollingSurface.index, window);
   }
 }
 
@@ -134,6 +172,12 @@ function refocusOnIndex(index){
     index = windowList.length - 1;
   }
 
+  for (var i = 0; i < windowList.length; i++) {
+    if (i >= index && i < index + columns){
+      windowList[i].minimized = false;
+      placePanelInSlot(i - index, windowList[i]);
+    } else {
+      windowList[i].minimized = true;
   if (windowList.length == 1 && maximizeOnly){
         windowList[0].minimized = false;
         placePanelInSlot(-1, windowList[0]);
@@ -183,8 +227,9 @@ function addHooks(window) {
     }
     
     var scrollingSurface = getCurrentScrollingSurface();
-    if ( scrollingSurface.array.indexOf(window) != -1 ) {
-      refocusOnIndex(-1)
+    var index = scrollingSurface.array.indexOf(window);
+    if ( index != -1 ) {
+      resetSize(window);
     }
   });
 
@@ -303,6 +348,9 @@ function unTileWindow(scrollingSurface, window) {
     if ( scrollingSurface == getCurrentScrollingSurface() ) {
       if ( index == scrollingSurface.index ) {
         refocusOnIndex(index - 1);
+      } else if ( index <= columns && index == windowList.length && maximizeOnly ) {
+        console.info("made it here");
+        refocusOnIndex(0);
       } else {
         refocusOnIndex(-1);
       } 
