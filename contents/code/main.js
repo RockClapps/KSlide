@@ -165,7 +165,7 @@ function resetSize(window) {
         window.minimized = false;
         placePanelInSlot(-1, window);
   } else {
-    console.info("placing on " + (index - scrollingSurface.index));
+    //console.info("placing on " + (index - scrollingSurface.index));
     placePanelInSlot(index - scrollingSurface.index, window);
   }
 }
@@ -354,14 +354,15 @@ function unTileWindow(scrollingSurface, window) {
     window.keepBelow = false;
     windowList.splice(index, 1);
     if ( scrollingSurface == getCurrentScrollingSurface() ) {
-      if ( index == scrollingSurface.index ) {
-        refocusOnIndex(index - 1);
-      } else if ( index <= columns && index == windowList.length && maximizeOnly ) {
-        console.info("made it here");
+
+      if ( index <= columns && index == windowList.length && maximizeOnly ) {
         refocusOnIndex(0);
+      } else if ( index == scrollingSurface.index ) {
+        refocusOnIndex(index - 1);
       } else {
         refocusOnIndex(-1);
       } 
+
     }
   }
 }
